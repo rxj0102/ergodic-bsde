@@ -158,18 +158,23 @@ def ergodic_ou_quadratic_analytical(
         Forward : dX = -κX dt + σ dW   (θ = 0)
         Driver  : f(x, y, z) = αx² + β - (γ/2)z²
 
-    Via Cole-Hopf (v = -(2/γ) log w), the ergodic PDE reduces to a
-    quantum harmonic oscillator (QHO) eigenvalue problem:
+    Via Cole-Hopf (v = -(1/γ) log φ), the ergodic PDE linearises to
+    the principal eigenvalue problem for the tilted generator:
 
-        (σ²/2) w'' - κx w' + (γ/2)(αx² + β) w = λ_w · w
+        (L - γh) φ = -λγ φ,   h(x) = αx² + β
 
-    The principal eigenvalue of this QHO-type operator is:
+    where L = (σ²/2)∂² - κx∂ is the OU generator.  Substituting the
+    ground-state Ansatz φ(x) = exp(-cx²/2) and matching coefficients:
 
-        λ_w = (1/2)[ -κ + √(κ² + 2γα σ²) ]   (for α > 0, γ > 0)
+        c²σ²/2 + κc - γα = 0  →  c = [-κ + √(κ² + 2γασ²)] / σ²
+
+    The ergodic constant satisfies  -cσ²/2 = -λγ, giving:
+
+        λ_w = (1/2)[ -κ + √(κ² + 2γα σ²) ]   (for α ≥ 0, γ > 0)
 
     The ergodic constant of the BSDE is:
 
-        λ = -(2/γ) λ_w + β
+        λ = (1/γ) λ_w + β
 
     Parameters
     ----------
@@ -191,7 +196,7 @@ def ergodic_ou_quadratic_analytical(
 
     discriminant = kappa**2 + 2.0 * gamma * alpha * sigma**2
     lambda_w = 0.5 * (-kappa + np.sqrt(discriminant))
-    lambda_ergodic = -(2.0 / gamma) * lambda_w + beta
+    lambda_ergodic = (1.0 / gamma) * lambda_w + beta
 
     return {
         "lambda_ergodic": float(lambda_ergodic),

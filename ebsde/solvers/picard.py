@@ -37,6 +37,7 @@ class PicardBSDESolver:
         n_picard: int = 5,
         basis_type: str = "polynomial",
         basis_degree: int = 3,
+        z_clip: Optional[float] = 20.0,
         rng_seed: Optional[int] = None,
     ) -> None:
         self.bsde = bsde
@@ -45,6 +46,7 @@ class PicardBSDESolver:
         self.n_picard = n_picard
         self.basis_type = basis_type
         self.basis_degree = basis_degree
+        self.z_clip = z_clip
         self.rng = np.random.default_rng(rng_seed)
 
     # ------------------------------------------------------------------
@@ -103,6 +105,10 @@ class PicardBSDESolver:
                 # EY = E[Y_{i+1} | X_i] via regression
                 EY, Z_i = self._regression_step(Y[:, i + 1], X_i, dW_i, dt)
 
+                # Clip Z to prevent explosion in quadratic/non-Lipschitz drivers
+                if self.z_clip is not None:
+                    Z_i = np.clip(Z_i, -self.z_clip, self.z_clip)
+
                 # Evaluate f at EY (explicit scheme): correct in one backward
                 # pass for all drivers, including those linear in y.
                 # For nonlinear drivers, subsequent Picard passes refine Z.
@@ -146,7 +152,12 @@ class PicardBSDESolver:
         EY : (N,)   conditional expectation
         Z  : (N, d) control estimate
         """
-        Phi = self._build_basis(X_curr)  # (N, K)
+        # Standardise X for numerical stability of the polynomial basis
+        x_mean = X_curr.mean(axis=0)
+        x_std = X_curr.std(axis=0) + 1e-8
+        X_scaled = (X_curr - x_mean) / x_std
+
+        Phi = self._build_basis(X_scaled)  # (N, K)
 
         # --- conditional expectation ---
         alpha, *_ = np.linalg.lstsq(Phi, Y_next, rcond=None)
