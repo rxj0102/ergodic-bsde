@@ -12,3 +12,5 @@ jobs:
       - run: pip install torch --index-url https://download.pytorch.org/whl/cpu
       - run: pip install -e . pytest
       - run: python -m pytest -q
+      - name: README benchmark table matches results/
+        run: python experiments/run_readme_benchmark.py --check
